@@ -14,14 +14,14 @@
 
 import("//build_overrides/chip.gni")
 
-print("Entering BDX BUILD.gn")
-
 static_library("bdx") {
   output_name = "libBdx"
 
   sources = [
     "BDXMessages.h",
     "BDXMessages.cpp",
+    "BDXState.h",
+    "BDXState.cpp",
   ]
 
   cflags = [ "-Wconversion" ]
