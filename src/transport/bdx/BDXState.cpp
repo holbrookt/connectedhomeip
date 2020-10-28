@@ -66,7 +66,7 @@ CHIP_ERROR BDXState::HandleMessageReceived(uint16_t msgType, System::PacketBuffe
     }
 
 done:
-    return;
+    return CHIP_NO_ERROR;
 }
 /*
 void BDXState::HandleSendInit()
