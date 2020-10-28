@@ -18,7 +18,7 @@
 
 /**
  *    @file
- *      
+ *
  *
  */
 
@@ -26,12 +26,12 @@
 #define __BDXMESSAGES_H__
 
 /*
-#include <Weave/Profiles/bulk-data-transfer/Development/BDXManagedNamespace.hpp>
-#include <Weave/Profiles/bulk-data-transfer/Development/BDXConstants.h>
-#include <Weave/Support/NLDLLUtil.h>
 #include <Weave/Core/WeaveCore.h>
 #include <Weave/Core/WeaveMessageLayer.h>
 #include <Weave/Profiles/ProfileCommon.h>
+#include <Weave/Profiles/bulk-data-transfer/Development/BDXConstants.h>
+#include <Weave/Profiles/bulk-data-transfer/Development/BDXManagedNamespace.hpp>
+#include <Weave/Support/NLDLLUtil.h>
 */
 
 /**
@@ -47,17 +47,19 @@
 namespace chip {
 namespace BDX {
 
-enum MessageTypes : uint16_t {
-    kSendInit       = 0x01,
-    kSendAccept     = 0x02,
-    kReceiveInit    = 0x04,
-    kReceiveAccept  = 0x05,
-    kBlockQuery     = 0x10,
-    kBlock          = 0x11,
-    kBlockEOF       = 0x12,
-    kBlockAck       = 0x13,
-    kBlockAckEOF    = 0x14,
-}
+enum MessageTypes : uint16_t
+{
+    kSendInit      = 0x01,
+    kSendAccept    = 0x02,
+    kReceiveInit   = 0x04,
+    kReceiveAccept = 0x05,
+    kBlockQuery    = 0x10,
+    kBlock         = 0x11,
+    kBlockEOF      = 0x12,
+    kBlockAck      = 0x13,
+    kBlockAckEOF   = 0x14,
+    kStatusReport  = 0xff, // TODO: temporary
+};
 
 /**
  * @class SendInit
@@ -69,35 +71,33 @@ enum MessageTypes : uint16_t {
 class SendInit
 {
 public:
-    SendInit(void);
+    SendInit();
 
     uint8_t test;
-/*
-    WEAVE_ERROR init(uint8_t aVersion,
-                     bool aSenderDrive,
-                     bool aReceiverDrive,
-                     bool aAsynchMode,
-                     uint16_t aMaxBlockSize,
-                     uint64_t aStartOffset,
-                     uint64_t aLength,
-                     ReferencedString &aFileDesignator,
-                     ReferencedTLVData *aMetaData);
+    /*
+        WEAVE_ERROR init(uint8_t aVersion,
+                         bool aSenderDrive,
+                         bool aReceiverDrive,
+                         bool aAsynchMode,
+                         uint16_t aMaxBlockSize,
+                         uint64_t aStartOffset,
+                         uint64_t aLength,
+                         ReferencedString &aFileDesignator,
+                         ReferencedTLVData *aMetaData);
 
-    WEAVE_ERROR init(uint8_t aVersion,
-                     bool aSenderDrive,
-                     bool aReceiverDrive,
-                     bool aAsynchMode,
-                     uint16_t aMaxBlockSize,
-                     uint32_t aStartOffset,
-                     uint32_t aLength,
-                     ReferencedString &aFileDesignator,
-                     ReferencedTLVData *aMetaData);
-*/
-
+        WEAVE_ERROR init(uint8_t aVersion,
+                         bool aSenderDrive,
+                         bool aReceiverDrive,
+                         bool aAsynchMode,
+                         uint16_t aMaxBlockSize,
+                         uint32_t aStartOffset,
+                         uint32_t aLength,
+                         ReferencedString &aFileDesignator,
+                         ReferencedTLVData *aMetaData);
+    */
 };
 
-}
-}
-
+} // namespace BDX
+} // namespace chip
 
 #endif // __BDXMESSAGES_H__

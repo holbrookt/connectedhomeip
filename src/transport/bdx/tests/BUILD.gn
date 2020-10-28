@@ -18,35 +18,17 @@ import("//build_overrides/nlunit_test.gni")
 
 import("${chip_root}/gn/chip/chip_test_suite.gni")
 
-static_library("helpers") {
-  output_name = "libNetworkTestHelpers"
-
-  sources = [
-    "NetworkTestHelpers.cpp",
-    "NetworkTestHelpers.h",
-  ]
-
-  cflags = [ "-Wconversion" ]
-
-  public_deps = [ "${chip_root}/src/inet/tests:tests_common" ]
-}
-
 chip_test_suite("tests") {
-  output_name = "libRawTransportTests"
+  output_name = "libBDXTests"
 
   sources = [
-    "TestMessageHeader.cpp",
-    "TestRawTransportLayer.h",
-    "TestTCP.cpp",
-    "TestUDP.cpp",
+    "TestBDXState.cpp",
   ]
 
   public_deps = [
-    ":helpers",
-    "${chip_root}/src/inet/tests:tests_common",
     "${chip_root}/src/lib/core",
     "${chip_root}/src/lib/support",
-    "${chip_root}/src/transport/raw",
+    "${chip_root}/src/transport/bdx",
     "${nlio_root}:nlio",
     "${nlunit_test_root}:nlunit-test",
   ]
@@ -54,11 +36,6 @@ chip_test_suite("tests") {
   cflags = [ "-Wconversion" ]
 
   tests = [
-    "TestMessageHeader",
-    "TestUDP",
+    "TestBDXState",
   ]
-
-  if (current_os != "mac") {
-    tests += [ "TestTCP" ]
-  }
 }
