@@ -25,7 +25,7 @@
 #include <transport/bdx/BDXMessages.h>
 
 namespace chip {
-namespace Transport {
+namespace BDX {
 
 SendInit::SendInit()
 {
