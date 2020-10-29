@@ -17,6 +17,7 @@ BDXState::BDXState(TransferParams transferParams, SendMessageCallback sendMessag
 {
     mSupportedOptions = transferParams;
     SendMessage       = sendMessageCallback;
+    mState            = kIdle;
 }
 
 CHIP_ERROR BDXState::HandleMessageReceived(uint16_t msgType, System::PacketBuffer * msgData)
@@ -92,19 +93,20 @@ void BDXState::HandleReceiveInit(System::PacketBuffer * msgData)
     // must not be in the middle of a transfer
     if (mState != kIdle)
     {
-        // TODO: send ReceiveReject message
+        // TODO: Send StatusReport message with appropriate error
         SendMessage(kStatusReport, NULL);
         goto done;
     }
 
     if (!AreParametersAcceptable())
     {
-        // TODO: send ReceiveReject message
+        // TODO: Send StatusReport message with appropriate error
         SendMessage(kStatusReport, NULL);
         goto done;
     }
 
-    // TODO: send ReceiveAccept message
+    // TODO: fill out ReceiveAccept message
+    SendMessage(kReceiveAccept, NULL);
 
     if (mControlMode == kReceiverDrive)
     {
@@ -113,6 +115,7 @@ void BDXState::HandleReceiveInit(System::PacketBuffer * msgData)
     else if (mControlMode == kSenderDrive)
     {
         // TODO: send block
+        SendMessage(kBlock, NULL);
     }
 
 done:
@@ -201,7 +204,8 @@ void BDXState::EndTransfer(CHIP_ERROR error)
 
 bool BDXState::AreParametersAcceptable()
 {
-    // TODO
+    // TODO:
+    mControlMode = kSenderDrive;
     return true;
 }
 

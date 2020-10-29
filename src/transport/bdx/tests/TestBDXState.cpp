@@ -12,6 +12,7 @@ static uint16_t lastMessageSent = BDX::MessageTypes::kStatusReport;
 
 CHIP_ERROR MockSendMessageCallback(uint16_t msgType, System::PacketBuffer * msgData)
 {
+    printf("BDXState machine sent message %x\n", msgType);
     lastMessageSent = msgType;
     return CHIP_NO_ERROR;
 }
@@ -20,13 +21,18 @@ void TestHandleReceiveInitSenderOnly(nlTestSuite * inSuite, void * inContext)
 {
     // Initialize state machine
     BDX::TransferParams params = { BDX::TransferRole::kReceiver, true, true };
-    BDX::BDXState bdxState(params, MockSendMessageCallback);
+    BDX::BDXState bdxReceiver(params, MockSendMessageCallback);
 
     // send mock message
     System::PacketBuffer * p = System::PacketBuffer::New(10);
-    bdxState.HandleMessageReceived(BDX::MessageTypes::kReceiveInit, p);
-
+    bdxReceiver.HandleMessageReceived(BDX::MessageTypes::kReceiveInit, p);
     NL_TEST_ASSERT(inSuite, lastMessageSent == BDX::MessageTypes::kStatusReport);
+
+    params = { BDX::TransferRole::kSender, true, true };
+    BDX::BDXState bdxSender(params, MockSendMessageCallback);
+
+    bdxSender.HandleMessageReceived(BDX::MessageTypes::kReceiveInit, p);
+    NL_TEST_ASSERT(inSuite, lastMessageSent == BDX::MessageTypes::kBlock);
 }
 
 // Test Suite
