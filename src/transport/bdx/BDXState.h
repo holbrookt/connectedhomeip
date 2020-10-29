@@ -34,7 +34,7 @@ enum TransferRole : uint8_t
     kNotSpecified = 2,
 };
 
-struct TransferParams
+struct TransferParams // TODO: NodeParams?
 {
     TransferRole Role;
     // bool SupportsAsync;
@@ -56,7 +56,6 @@ public:
     void HandleReceiveInit(System::PacketBuffer * msgData);
     void HandleMessageError(CHIP_ERROR error);
 
-    // TODO: define callback for sending messages
 private:
     bool AreParametersAcceptable();
     void EndTransfer(CHIP_ERROR error);
