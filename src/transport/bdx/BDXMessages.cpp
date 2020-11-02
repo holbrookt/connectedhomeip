@@ -18,7 +18,7 @@
 
 /**
  *    @file
- *      
+ *
  *
  */
 
@@ -27,11 +27,5 @@
 namespace chip {
 namespace BDX {
 
-SendInit::SendInit()
-{
-    test = 80;
-}
-
-} // namespace Transport
+} // namespace BDX
 } // namespace chip
-

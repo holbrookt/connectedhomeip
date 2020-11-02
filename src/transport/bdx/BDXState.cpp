@@ -8,18 +8,30 @@
 
 #include <transport/bdx/BDXMessages.h>
 
-#include <core/CHIPError.h>
+#include <support/CodeUtils.h>
 
 namespace chip {
 namespace BDX {
 
-BDXState::BDXState(TransferParams transferParams, SendMessageCallback sendMessageCallback)
+BDXState::BDXState()
 {
-    mSupportedOptions = transferParams;
-    SendMessage       = sendMessageCallback;
-    mState            = kIdle;
+    mState = kIdle;
 }
 
+CHIP_ERROR BDXState::Init(TransferRole role, TransferControlParams controlParams, RangeControlParams rangeParams,
+                          uint16_t maxBlockSize, BDXStateDelegate * delegate)
+{
+    CHIP_ERROR err         = CHIP_NO_ERROR;
+    mRole                  = role;
+    mControlParams         = controlParams;
+    mRangeParams           = rangeParams;
+    mMaxSupportedBlockSize = maxBlockSize;
+    mDelegate              = delegate;
+
+    return err;
+}
+
+// TODO: change parameter to PacketHeader
 CHIP_ERROR BDXState::HandleMessageReceived(uint16_t msgType, System::PacketBuffer * msgData)
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
@@ -83,42 +95,23 @@ void BDXState::HandleSendAccept()
 void BDXState::HandleReceiveInit(System::PacketBuffer * msgData)
 {
     // must be configured as a sender
-    if (mSupportedOptions.Role != kSender)
-    {
-        // TODO: Send StatusReport message with appropriate error
-        SendMessage(kStatusReport, NULL);
-        goto done;
-    }
+    VerifyOrExit(mRole == kSender, mDelegate->OnTransferError(kTransferMethodNotSupported));
 
     // must not be in the middle of a transfer
-    if (mState != kIdle)
-    {
-        // TODO: Send StatusReport message with appropriate error
-        SendMessage(kStatusReport, NULL);
-        goto done;
-    }
+    VerifyOrExit(mState == kIdle, mDelegate->OnTransferError(kServerBadState));
 
-    if (!AreParametersAcceptable())
+    if (AreParametersCompatible())
     {
         // TODO: Send StatusReport message with appropriate error
-        SendMessage(kStatusReport, NULL);
+        mDelegate->SendMessage(kStatusReport_Temp, NULL);
         goto done;
     }
 
     // TODO: fill out ReceiveAccept message
-    SendMessage(kReceiveAccept, NULL);
+    mDelegate->SendMessage(kReceiveAccept, NULL);
+    mState = kTransferInProgress;
 
-    if (mControlMode == kReceiverDrive)
-    {
-        // TODO: wait for query
-    }
-    else if (mControlMode == kSenderDrive)
-    {
-        // TODO: send block
-        SendMessage(kBlock, NULL);
-    }
-
-done:
+exit:
     return;
 }
 /*
@@ -195,14 +188,31 @@ BDXState::HandleBlockAckEOF()
     EndTransfer(CHIP_NO_ERROR);
 }
 */
-void BDXState::EndTransfer(CHIP_ERROR error)
+
+CHIP_ERROR BDXState::StartTransfer()
 {
-    // TODO
-    // kControlMode = kNotSpecified;
-    // mState = kStateIdle;
+    CHIP_ERROR err = CHIP_NO_ERROR;
+
+    if (mRole == kSender && mControlMode == kSenderDrive)
+    {
+        // TODO: send Block message
+    }
+    else if (mRole == kReceiver && mControlMode == kReceiverDrive)
+    {
+        // TODO: send BlockQuery
+    }
+
+    return err;
 }
 
-bool BDXState::AreParametersAcceptable()
+void BDXState::EndTransfer(CHIP_ERROR error)
+{
+    // TODO:
+    mControlMode = kNotSpecified;
+    mState       = kIdle;
+}
+
+bool BDXState::AreParametersCompatible()
 {
     // TODO:
     mControlMode = kSenderDrive;

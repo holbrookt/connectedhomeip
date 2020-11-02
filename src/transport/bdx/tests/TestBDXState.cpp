@@ -1,38 +1,53 @@
 #include <transport/bdx/BDXMessages.h>
 #include <transport/bdx/BDXState.h>
+#include <transport/raw/MessageHeader.h>
 
 #include <nlunit-test.h>
 
-#include <core/CHIPCore.h>
+#include <support/CodeUtils.h>
 #include <support/TestUtils.h>
 
-using namespace chip;
+using namespace ::chip;
 
-static uint16_t lastMessageSent = BDX::MessageTypes::kStatusReport;
+static const uint16_t kTestMaxBlockSize = 256;
 
-CHIP_ERROR MockSendMessageCallback(uint16_t msgType, System::PacketBuffer * msgData)
+class DLL_EXPORT MockBDXStateDelegate : public BDX::BDXStateDelegate
 {
-    printf("BDXState machine sent message %x\n", msgType);
-    lastMessageSent = msgType;
-    return CHIP_NO_ERROR;
-}
+public:
+    CHIP_ERROR SendMessage(BDXMsgType msgType, System::PacketBuffer * msgBuf) override
+    {
+        mLastMessageSent = msgType;
+        return CHIP_NO_ERROR;
+    }
 
-void TestHandleReceiveInitSenderOnly(nlTestSuite * inSuite, void * inContext)
+    uint16_t mLastMessageSent;
+};
+
+void TestHandleReceiveInit(nlTestSuite * inSuite, void * inContext)
 {
-    // Initialize state machine
-    BDX::TransferParams params = { BDX::TransferRole::kReceiver, true, true };
-    BDX::BDXState bdxReceiver(params, MockSendMessageCallback);
+    MockBDXStateDelegate mockDelegate;
+    System::PacketBuffer * pEmptyMsg = System::PacketBuffer::New(10);
 
-    // send mock message
-    System::PacketBuffer * p = System::PacketBuffer::New(10);
-    bdxReceiver.HandleMessageReceived(BDX::MessageTypes::kReceiveInit, p);
-    NL_TEST_ASSERT(inSuite, lastMessageSent == BDX::MessageTypes::kStatusReport);
+    // Support Sender and Receiver drive, no async, no range offsets
+    BDX::TransferControlParams transferParams = { false, true, true };
+    BDX::RangeControlParams rangeParams       = { false, 0, 0 };
 
-    params = { BDX::TransferRole::kSender, true, true };
-    BDX::BDXState bdxSender(params, MockSendMessageCallback);
+    // Initialize Receiver state machine
+    BDX::BDXState bdxReceiver;
+    bdxReceiver.Init(BDX::kReceiver, transferParams, rangeParams, kTestMaxBlockSize, &mockDelegate);
 
-    bdxSender.HandleMessageReceived(BDX::MessageTypes::kReceiveInit, p);
-    NL_TEST_ASSERT(inSuite, lastMessageSent == BDX::MessageTypes::kBlock);
+    // Verify Receiver cannot respond to ReceiveInit
+    // TODO: is this an actual constraint?
+    bdxReceiver.HandleMessageReceived(BDX::BDXMsgType::kReceiveInit, pEmptyMsg);
+    NL_TEST_ASSERT(inSuite, mockDelegate.mLastMessageSent == BDX::BDXMsgType::kStatusReport_Temp);
+
+    // Initialize Sender state machine
+    BDX::BDXState bdxSender;
+    bdxSender.Init(BDX::kSender, transferParams, rangeParams, kTestMaxBlockSize, &mockDelegate);
+
+    // Verify Sender sends ReceiveAccept in response to ReceiveInit
+    bdxSender.HandleMessageReceived(BDX::BDXMsgType::kReceiveInit, pEmptyMsg);
+    NL_TEST_ASSERT(inSuite, mockDelegate.mLastMessageSent == BDX::BDXMsgType::kReceiveAccept);
 }
 
 // Test Suite
@@ -43,7 +58,7 @@ void TestHandleReceiveInitSenderOnly(nlTestSuite * inSuite, void * inContext)
 // clang-format off
 static const nlTest sTests[] =
 {
-    NL_TEST_DEF("ReceiveInitSenderOnly", TestHandleReceiveInitSenderOnly),
+    NL_TEST_DEF("ReceiveInitSenderOnly", TestHandleReceiveInit),
 
     NL_TEST_SENTINEL()
 };
